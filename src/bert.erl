@@ -7,10 +7,6 @@
 
 -export([encode/1, decode/1]).
 
--ifdef(TEST).
--include("test/bert_test.erl").
--endif.
-
 %%---------------------------------------------------------------------------
 %% Public API
 
@@ -67,3 +63,30 @@ decode_term(Term) ->
       list_to_tuple(TList2);
     _Else -> Term
   end.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+%% encode
+
+encode_list_nesting_test() ->
+  Bert = term_to_binary([foo, {bert, true}]),
+  Bert = encode([foo, true]).
+
+encode_tuple_nesting_test() ->
+  Bert = term_to_binary({foo, {bert, true}}),
+  Bert = encode({foo, true}).
+
+%% decode
+
+decode_list_nesting_test() ->
+  Bert = term_to_binary([foo, {bert, true}]),
+  Term = [foo, true],
+  Term = decode(Bert).
+
+decode_tuple_nesting_test() ->
+  Bert = term_to_binary({foo, {bert, true}}),
+  Term = {foo, true},
+  Term = decode(Bert).
+
+-endif.
