@@ -30,7 +30,7 @@ encode_term(Term) ->
     [] -> {bert, nil};
     true -> {bert, true};
     false -> {bert, false};
-    Dict when is_record(Term, dict, 8) ->
+    Dict when is_record(Term, dict, 9) ->
       {bert, dict, dict:to_list(Dict)};
     List when is_list(Term) ->
       lists:map((fun encode_term/1), List);
@@ -76,6 +76,10 @@ encode_list_nesting_test() ->
 encode_tuple_nesting_test() ->
   Bert = term_to_binary({foo, {bert, true}}),
   Bert = encode({foo, true}).
+
+encode_term_dict_test() ->
+  Term = {bert, dict, [{key, value}]},
+  ?assertEqual(Term, encode_term(dict:from_list([{key, value}]))).
 
 %% decode
 
