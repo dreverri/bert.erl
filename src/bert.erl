@@ -31,7 +31,7 @@ encode_term(Term) ->
     true -> {bert, true};
     false -> {bert, false};
     Dict when is_record(Term, dict, 9) ->
-      {bert, dict, dict:to_list(Dict)};
+      {bert, dict, lists:keymap(fun encode_term/1, 2, dict:to_list(Dict))};
     List when is_list(Term) ->
       lists:map((fun encode_term/1), List);
     Tuple when is_tuple(Term) ->
@@ -52,7 +52,7 @@ decode_term(Term) ->
     {bert, true} -> true;
     {bert, false} -> false;
     {bert, dict, Dict} ->
-      dict:from_list(Dict);
+      dict:from_list(lists:keymap(fun decode_term/1, 2, Dict));
     {bert, Other} ->
       {bert, Other};
     List when is_list(Term) ->
@@ -77,10 +77,6 @@ encode_tuple_nesting_test() ->
   Bert = term_to_binary({foo, {bert, true}}),
   Bert = encode({foo, true}).
 
-encode_term_dict_test() ->
-  Term = {bert, dict, [{key, value}]},
-  ?assertEqual(Term, encode_term(dict:from_list([{key, value}]))).
-
 %% decode
 
 decode_list_nesting_test() ->
@@ -92,5 +88,19 @@ decode_tuple_nesting_test() ->
   Bert = term_to_binary({foo, {bert, true}}),
   Term = {foo, true},
   Term = decode(Bert).
+
+%% Using encode_term/decode_term to make reading failed test cases easier
+roundtrip_dict_test() ->
+  Bert = {bert, dict, [{key, value}]},
+  Term = dict:from_list([{key, value}]),
+  ?assertEqual(Bert, encode_term(Term)),
+  ?assertEqual(Term, decode_term(Bert)).
+
+roundtrip_dict_nesting_test() ->
+  Bert = {bert, dict, [{key, {bert, dict, [{key, value}]}}]},
+  InnerTerm = dict:from_list([{key, value}]),
+  OuterTerm = dict:from_list([{key, InnerTerm}]),
+  ?assertEqual(Bert, encode_term(OuterTerm)),
+  ?assertEqual(OuterTerm, decode_term(Bert)).
 
 -endif.
